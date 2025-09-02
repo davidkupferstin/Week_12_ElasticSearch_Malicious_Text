@@ -124,14 +124,11 @@ class DocumentsIndex:
 
 class SentimentProcessing:
     def __init__(self):
-        # מגדירים את אינדקס המסמכים ואת חיבור ל-Elasticsearch
         self.doc_index = DocumentsIndex()
         self.es = self.doc_index.es
 
-        # משתמשים במודל מוכן של Elastic במקום ליצור מודל חדש
-        self.model_id = "sentiment-analysis"  # מודל מוכשר קיים
+        self.model_id = "sentiment-analysis"
 
-        # יוצרים pipeline לעיבוד סנטימנט
         self.pipeline_body = {
             "description": "Analyze sentiment of text",
             "processors": [
@@ -139,7 +136,7 @@ class SentimentProcessing:
                     "inference": {
                         "model_id": self.model_id,
                         "field_map": {
-                            "text": "text"  # שם השדה במסמך שמכיל את הטקסט
+                            "text": "text"
                         },
                         "target_field": "sentiment"
                     }
@@ -147,19 +144,17 @@ class SentimentProcessing:
             ]
         }
 
-        # יוצרים את ה-pipeline ב-Elasticsearch
         self.pipeline = self.es.ingest.put_pipeline(
             id="sentiment-analysis",
             body=self.pipeline_body
         )
 
     def found_sentiment_and_update(self):
-        # מפעילים את ה-pipeline על כל המסמכים באינדקס
         self.es.update_by_query(
             index="tweets_injected",
             body={
                 "script": {
-                    "source": "ctx._source = ctx._source",  # פשוט משאיר את המסמך כמו שהוא
+                    "source": "ctx._source = ctx._source",
                     "lang": "painless"
                 },
                 "query": {"match_all": {}},
